@@ -9,7 +9,9 @@ from collections import OrderedDict
 from bs4 import BeautifulSoup
 
 
-library_docs_index_path = '/usr/share/doc/python/html/library/index.html'
+library_docs_index_url = 'file:///usr/share/doc/python/html/library/index.html'
+# library_docs_index_url = 'https://docs.python.org/3/library/index.html'
+# library_docs_index_url = 'https://docs.python.org/2/library/index.html'
 
 dmenu_cmd = [ 'dmenu',
 	'-f',
@@ -30,9 +32,23 @@ dmenu_cmd = [ 'dmenu',
 ]
 
 
+def get_url(url):
+	if url.startswith('file://'):
+		with open(url[7:]) as f:
+			return f.read()
+
+	else:
+		import requests  # Import conditionally for users who don't have it installed, but want to use local docs.
+
+		response = requests.get(url)
+		response.raise_for_status()
+
+		return response.text
+
+
 def main():
-	with open(library_docs_index_path) as library_docs_index:
-		soup = BeautifulSoup(library_docs_index, "lxml")
+	library_docs_index = get_url(library_docs_index_url)
+	soup = BeautifulSoup(library_docs_index, "lxml")
 
 	html_links = soup.select('li a')
 	links = OrderedDict( (link.get_text(), link['href']) for link in html_links )
@@ -51,14 +67,12 @@ def main():
 		out = dmenu.communicate()[0].strip()
 
 
-	print(out)
-
 	try:
 		href = links[out]
 	except KeyError:
 		raise sys.exit(1)
 
-	url = urllib.parse.urljoin(library_docs_index_path, href)
+	url = urllib.parse.urljoin(library_docs_index_url, href)
 	print(url)
 
 
