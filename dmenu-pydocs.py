@@ -48,7 +48,7 @@ def get_url(url):
 
 def main():
 	library_docs_index = get_url(library_docs_index_url)
-	soup = BeautifulSoup(library_docs_index, "lxml")
+	soup = BeautifulSoup(library_docs_index, 'lxml')
 
 	html_links = soup.select('li a')
 	links = OrderedDict( (link.get_text(), link['href']) for link in html_links )
